@@ -75,7 +75,7 @@ int rpi_gpio_header_type() {
 	case 0x00000f: printf("Model B Rev 2.0 with 26 pin GPIO header detected\n"); header_type = GPIO_header_26; break;
 	case 0x000010: printf("Model B+ Rev 1.0 with 40 pin GPIO header detected\n"); break;
 	case 0x000014:
-	case 0x000011: printf("Compute Module is not supported\n"); exit(EXIT_FAILURE);
+vi 	case 0x000011: printf("Compute Module is not supported\n"); exit(EXIT_FAILURE);
 	case 0x000015:
 	case 0x000012: printf("Model A+ Rev 1.1 with 40 pin GPIO header detected\n"); break;
 	case 0x000013: printf("Model B+ Rev 1.2 with 40 pin GPIO header detected\n"); break;
@@ -108,18 +108,21 @@ void set_rts_cts(int enable) {
 	}
 	
 	volatile unsigned *gpio = (volatile unsigned *)gpio_map;
-
-	if (rpi_gpio_header_type() == GPIO_header_40) { /* newer 40 pin GPIO header */
-		gfpsel = GFPSEL1;
-		gpiomask = GPIO1617mask;
-		printf("Enabling CTS0 and RTS0 on GPIOs 16 and 17\n");
-	}
-	else { /* 26 pin GPIO header */
-		gfpsel = GFPSEL3;
-		gpiomask = GPIO3031mask;
-		printf("Enabling CTS0 and RTS0 on GPIOs 30 and 31\n");
-	}
 	
+        int detected_rpi_type = rpi_gpio_header_type();
+
+        if (detected_rpi_type == GPIO_header_40) { /* newer 40 pin GPIO header */
+                gfpsel = GFPSEL1;
+                gpiomask = GPIO1617mask;
+        }
+        else { /* 26 pin GPIO header */
+                gfpsel = GFPSEL3;
+                gpiomask = GPIO3031mask;
+        }
+        printf(enable ? "Enabling ":"Disabling ");
+        printf("CTS0 and RTS0 on GPIOs ");
+        printf(detected_rpi_type ? "16 and 17\n" : "30 and 31\n");
+
 	enable ? (gpio[gfpsel] |= gpiomask) : (gpio[gfpsel] &= ~gpiomask);
 }
 

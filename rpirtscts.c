@@ -47,7 +47,8 @@ int rpi_version() {
 	FILE *fp = fopen("/proc/cmdline", "r");
 	if (fp) {
 		while (fscanf(fp, "%255s", string) == 1)
-			if (sscanf(string, "bcm2708.boardrev=%i", &result))
+			/* raspberry pi 3b uses bcm2709 not 2708 */
+			if (sscanf(string, "bcm270%*1d.boardrev=%i", &result))
 				break;
 		fclose(fp);
 	}

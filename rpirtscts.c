@@ -75,7 +75,7 @@ int rpi_gpio_header_type() {
 	case 0x00000f: printf("Model B Rev 2.0 with 26 pin GPIO header detected\n"); header_type = GPIO_header_26; break;
 	case 0x000010: printf("Model B+ Rev 1.0 with 40 pin GPIO header detected\n"); break;
 	case 0x000014:
-vi 	case 0x000011: printf("Compute Module is not supported\n"); exit(EXIT_FAILURE);
+ 	case 0x000011: printf("Compute Module is not supported\n"); exit(EXIT_FAILURE);
 	case 0x000015:
 	case 0x000012: printf("Model A+ Rev 1.1 with 40 pin GPIO header detected\n"); break;
 	case 0x000013: printf("Model B+ Rev 1.2 with 40 pin GPIO header detected\n"); break;

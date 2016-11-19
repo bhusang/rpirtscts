@@ -21,7 +21,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define GPIO_BASE (0x20200000)
+#define GPIO_BASE_RPI (0x20200000)
+#define GPIO_BASE_RPI23 (0x3F200000)
 #define BLOCK_SIZE (4*1024)
 #define GFPSEL3 (3)
 #define GPIO3031mask 0x0000003f /* GPIO 30 for CTS0 and 31 for RTS0 */
@@ -93,14 +94,27 @@ int rpi_gpio_header_type() {
 
 
 void set_rts_cts(int enable) {
-	int gfpsel, gpiomask;
+	int gpio_base, gfpsel, gpiomask;
 	int fd = open("/dev/mem", O_RDWR|O_SYNC);
 	if (fd < 0) {
 		fprintf(stderr, "can't open /dev/mem (%s)\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
+
+        int detected_rpi_type = rpi_gpio_header_type();
+
+        if (detected_rpi_type == GPIO_header_40) { /* newer 40 pin GPIO header */
+                gfpsel = GFPSEL1;
+                gpiomask = GPIO1617mask;
+		gpio_base = GPIO_BASE_RPI23;
+        }
+        else { /* 26 pin GPIO header */
+                gfpsel = GFPSEL3;
+                gpiomask = GPIO3031mask;
+		gpio_base = GPIO_BASE_RPI;
+        }
 	
-	void *gpio_map = mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
+	void *gpio_map = mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, gpio_base);
 	close(fd);
 	if (gpio_map == MAP_FAILED) {
 		fprintf(stderr, "mmap error (%s)\n", strerror(errno));
@@ -109,16 +123,6 @@ void set_rts_cts(int enable) {
 	
 	volatile unsigned *gpio = (volatile unsigned *)gpio_map;
 	
-        int detected_rpi_type = rpi_gpio_header_type();
-
-        if (detected_rpi_type == GPIO_header_40) { /* newer 40 pin GPIO header */
-                gfpsel = GFPSEL1;
-                gpiomask = GPIO1617mask;
-        }
-        else { /* 26 pin GPIO header */
-                gfpsel = GFPSEL3;
-                gpiomask = GPIO3031mask;
-        }
         printf(enable ? "Enabling ":"Disabling ");
         printf("CTS0 and RTS0 on GPIOs ");
         printf(detected_rpi_type ? "16 and 17\n" : "30 and 31\n");
